@@ -21,15 +21,6 @@ export abstract class CreateInstallmentStrategy<T extends GraphNode> {
     this.config = config;
   }
 
-  // protected createIssue(config: {
-  //   id: string;
-  //   message: string;
-  //   severity: "ERROR" | "WARNING";
-  // }) {
-  //   const issue = new VestingScheduleIssue(config);
-  //   this.config.issues.push(issue);
-  // }
-
   protected getSharesVesting(): Fraction {
     const totalShares = parseFloat(
       this.config.ocfData.issuanceTransaction.quantity

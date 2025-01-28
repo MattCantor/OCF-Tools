@@ -8,7 +8,6 @@ import type {
 } from "types";
 
 const vestingConditions: VestingCondition[] = [
-  // vesting Start
   {
     id: "start-condition",
     description: "start condition",
@@ -18,7 +17,6 @@ const vestingConditions: VestingCondition[] = [
     },
     next_condition_ids: ["event_condition_A", "event_expiration_A"],
   },
-  // event A condition and expiration
   {
     id: "event_condition_A",
     description: "event condition A",
@@ -29,7 +27,7 @@ const vestingConditions: VestingCondition[] = [
     trigger: {
       type: "VESTING_EVENT",
     },
-    next_condition_ids: ["event_and_expiration_relationship_A"],
+    next_condition_ids: ["cycle"],
   },
   {
     id: "event_expiration_A",
@@ -39,15 +37,15 @@ const vestingConditions: VestingCondition[] = [
       type: "VESTING_SCHEDULE_ABSOLUTE",
       date: "2026-01-01",
     },
-    next_condition_ids: ["event_and_expiration_relationship_A"],
+    next_condition_ids: ["cycle"],
   },
-  // event A condition and expiration earlier_of relationship
   {
-    id: "event_and_expiration_relationship_A",
-    description: "event and expiration relationship A",
+    id: "cycle",
+    description: "cycle",
+    quantity: "0",
     trigger: {
-      type: "VESTING_RELATIONSHIP_EARLIER_OF",
-      input_condition_ids: ["event_condition_A", "event_expiration_A"],
+      type: "VESTING_SCHEDULE_ABSOLUTE",
+      date: "2027-01-01",
     },
     next_condition_ids: ["start-condition"],
   },
@@ -55,10 +53,10 @@ const vestingConditions: VestingCondition[] = [
 
 const vestingTerms: VestingTerms[] = [
   {
-    id: "event-with-expiration-dates",
+    id: "no-root-nodes",
     object_type: "VESTING_TERMS",
-    name: "Event With Expiration Dates",
-    description: "Event With Expiration Dates",
+    name: "no-root-nodes",
+    description: "no-root-nodes",
     allocation_type: "CUMULATIVE_ROUND_DOWN",
     vesting_conditions: vestingConditions,
   },
@@ -90,7 +88,7 @@ const transactions: (
         period_type: "MONTHS",
       },
     ],
-    vesting_terms_id: "event-with-expiration-dates",
+    vesting_terms_id: "no-root-nodes",
     valuation_id: "valuation_01",
   },
   {

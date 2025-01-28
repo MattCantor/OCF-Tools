@@ -1,122 +1,127 @@
 import type { GraphNode, OCFDataBySecurityId } from "types";
 import { ShouldBeInExecutionPathStrategyFactory } from "./shouldBeInExecutionPath/factory";
 
-interface CreateExecutionStackConfig {
-  currentNodeId: string;
-  visited: Set<string>;
-  executionStack: Map<string, GraphNode>;
-  graph: Map<string, GraphNode>;
-  recursionStack: Set<string>;
-  ocfData: OCFDataBySecurityId;
-}
+// /**
+//  * Configuration for processing each node in the vesting graph
+//  */
+// interface CreateExecutionStackConfig {
+//   currentNodeId: string; // Node being processed
+//   visited: Set<string>; // Nodes already seen
+//   executionStack: Map<string, GraphNode>; // Final execution order
+//   graph: Map<string, GraphNode>; // Complete vesting graph
+//   recursionStack: Set<string>; // Cycle detection
+//   ocfData: OCFDataBySecurityId; // OCT Data for this security id
+// }
 
+/**
+ * Creates an ordered execution stack from a vesting graph.
+ * In the case of sibling nodes in the vesting graph,
+ * only one node may enter the execution stack,
+ * based on whichever node is determined to have occcurred first in time.
+ */
 export const createExecutionStack = (
   graph: Map<string, GraphNode>,
   rootNodes: string[],
   ocfData: OCFDataBySecurityId
 ): Map<string, GraphNode> => {
-  const visited = new Set<string>();
-  const executionStack = new Map<string, GraphNode>();
-  const deferredSet = new Set<string>();
+  const visited = new Set<string>(); // Track visited nodes
+  const executionStack = new Map<string, GraphNode>(); // Final execution order
+  const siblingGroups = new Map<string, Set<string>>(); // Track sibling groups
 
-  // Use a queue to manage nodes to process
-  const nodesToProcess = [...rootNodes];
+  // Process root nodes first (they are siblings)
+  const earliestRootNodeId = findEarliestValidNode(
+    rootNodes,
+    graph,
+    ocfData,
+    executionStack
+  ).earliestId;
 
-  while (nodesToProcess.length > 0) {
-    const currentNodeId = nodesToProcess.shift()!;
+  if (earliestRootNodeId) {
+    processDFS(earliestRootNodeId, null);
+  }
 
-    const interimResult = traverseNode({
-      currentNodeId: currentNodeId,
-      visited,
-      executionStack,
+  function processDFS(nodeId: string, parentId: string | null) {
+    if (visited.has(nodeId)) return;
+
+    const node = graph.get(nodeId);
+    if (!node) throw new Error(`Node ${nodeId} not found`);
+
+    visited.add(nodeId);
+
+    // Collect all siblings
+    const siblings = parentId
+      ? Array.from(siblingGroups.get(parentId) || [])
+      : rootNodes;
+
+    const { nodeIsEarliest } = findEarliestValidNode(
+      siblings,
       graph,
-      recursionStack: new Set<string>(),
       ocfData,
-    });
+      executionStack,
+      nodeId
+    );
 
-    // Re-add deferred nodes
-    if (interimResult === "DEFER" && !deferredSet.has(currentNodeId)) {
-      nodesToProcess.push(currentNodeId);
-      deferredSet.add(currentNodeId);
+    if (nodeIsEarliest) {
+      executionStack.set(nodeId, node);
+
+      if (node.next_condition_ids.length > 0) {
+        siblingGroups.set(nodeId, new Set(node.next_condition_ids));
+        const { earliestId } = findEarliestValidNode(
+          node.next_condition_ids,
+          graph,
+          ocfData,
+          executionStack,
+          nodeId
+        );
+        if (earliestId) {
+          processDFS(earliestId, nodeId);
+        }
+      }
     }
   }
 
   return executionStack;
 };
 
-const traverseNode = (
-  config: CreateExecutionStackConfig
-): "DEFER" | "PROCEED" => {
-  const {
-    currentNodeId,
-    visited,
-    executionStack,
-    graph,
-    recursionStack,
-    ocfData,
-  } = config;
+/**
+ * Find the earliest node in the list of node ids
+ * if targetNodeToValidate is provided, it will return whether the target node is the earliest
+ */
+const findEarliestValidNode = (
+  nodeIds: string[],
+  graph: Map<string, GraphNode>,
+  ocfData: OCFDataBySecurityId,
+  executionStack: Map<string, GraphNode>,
+  nodeIdToValidate?: string
+): { earliestId: string | null; nodeIsEarliest: boolean } => {
+  // Determine which nodes should be in the execution path
+  const validNodes = nodeIds.filter((id) => {
+    const node = graph.get(id);
+    if (!node) throw new Error(`Node ${id} not found`);
 
-  // Check if there is a cycle
-  if (recursionStack.has(currentNodeId)) {
-    throw new Error(
-      `Cycle detected involving the vesting condition with id ${currentNodeId}`
-    );
-  }
+    const strategy = ShouldBeInExecutionPathStrategyFactory.getStrategy(node);
+    const shouldBeIncluded = new strategy({
+      node,
+      graph,
+      executionStack,
+      ocfData,
+    }).execute();
 
-  // Skip processing if the node has already been visited
-  if (visited.has(currentNodeId)) {
-    return "PROCEED"; // already processed, no deferral needed
-  }
+    return shouldBeIncluded;
+  });
 
-  const currentNode = graph.get(currentNodeId);
-  if (!currentNode) {
-    throw new Error(
-      `Vesting condition with id ${currentNodeId} does not exist`
-    );
-  }
+  // Find earliest triggered node
+  const earliest = validNodes.reduce((earliest, current) => {
+    const currentNode = graph.get(current)!;
+    const earliestNode = graph.get(earliest)!;
 
-  // Check if all predecessors have been evaluated
-  if (
-    currentNode.prior_condition_ids.some(
-      (predecessorId) => !visited.has(predecessorId)
-    )
-  ) {
-    // Defer processing if not all predecessors have been evaluated
-    return "DEFER";
-  }
+    return currentNode.triggeredDate! < earliestNode.triggeredDate!
+      ? current
+      : earliest;
+  }, validNodes[0]);
 
-  // Mark the node as visited and add to the recursion stack
-  visited.add(currentNodeId);
-  recursionStack.add(currentNodeId);
-
-  // Determine if the current node should be in the execution stack
-  const strategy =
-    ShouldBeInExecutionPathStrategyFactory.getStrategy(currentNode);
-  const shouldBeIncluded = new strategy({
-    node: currentNode,
-    graph: graph,
-    executionStack: executionStack,
-    ocfData: ocfData,
-  }).execute();
-
-  if (shouldBeIncluded) {
-    executionStack.set(currentNodeId, currentNode);
-
-    // Recursively process all next conditions
-    for (const nextConditionId of currentNode.next_condition_ids) {
-      traverseNode({
-        currentNodeId: nextConditionId,
-        visited: visited,
-        executionStack: executionStack,
-        graph: graph,
-        recursionStack: recursionStack,
-        ocfData: ocfData,
-      });
-    }
-  }
-
-  // Remove from recursion stack
-  recursionStack.delete(currentNodeId);
-
-  return "PROCEED"; // Indicate that no deferral is required
+  return {
+    earliestId: earliest,
+    nodeIsEarliest: nodeIdToValidate ? earliest === nodeIdToValidate : true,
+  };
 };

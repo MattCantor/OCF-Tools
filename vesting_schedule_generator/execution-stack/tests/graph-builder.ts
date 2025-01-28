@@ -1,7 +1,5 @@
 import type {
-  Earlier_Of_Trigger,
   GraphNode,
-  Later_Of_Trigger,
   VestingAbsoluteTrigger,
   VestingEventTrigger,
   VestingRelativeTrigger,
@@ -16,8 +14,6 @@ export const buildUnpopulatedGraphNode = (
     | VestingAbsoluteTrigger
     | VestingEventTrigger
     | VestingRelativeTrigger
-    | Earlier_Of_Trigger
-    | Later_Of_Trigger
 ) => {
   return {
     id: id,
@@ -32,12 +28,10 @@ export const buildUnpopulatedGraphNode = (
 
 export const buildPopulatedGraphNode = (
   unpopulatedNode: GraphNode,
-  prior_condition_ids: string[],
-  part_of_relationship?: boolean
+  prior_condition_ids: string[]
 ) => {
   return {
     ...unpopulatedNode,
     prior_condition_ids,
-    part_of_relationship,
   } as GraphNode;
 };

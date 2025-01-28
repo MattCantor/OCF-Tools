@@ -1,6 +1,6 @@
 import { GraphNode } from "types";
 import { getOCFDataBySecurityId } from "../../get-ocf-data-by-security-id";
-import { ocfPackage as FourYearMonthly1YearCliff } from "../../tests/testOcfPackages/four-year-monthly-with-1-year-cliff";
+import { ocfPackage as FourYearMonthly1YearCliff } from "../../tests/testOcfPackages/documentation_examples/4yr-1yr-cliff-schedule";
 import { parseISO } from "date-fns";
 import { ocfPackage as DeliberateCycle } from "../../tests/testOcfPackages/deliberate-cycle";
 import { ocfPackage as NoRootNodes } from "../../tests/testOcfPackages/no-root-nodes";
@@ -25,7 +25,6 @@ const getExecutionStack = (
   const graphNodes = vestingConditions.map((vc) => {
     const graphNode: GraphNode = {
       ...vc,
-      part_of_relationship: undefined,
       triggeredDate: undefined,
       prior_condition_ids: [],
     };
@@ -68,7 +67,6 @@ describe("4 year monthly with one year cliff", () => {
           },
           next_condition_ids: ["monthly_vesting_condition"],
           prior_condition_ids: [],
-          part_of_relationship: undefined,
           triggeredDate: parseISO("2024-06-01"),
         },
       ],
@@ -94,7 +92,6 @@ describe("4 year monthly with one year cliff", () => {
           },
           next_condition_ids: [],
           prior_condition_ids: ["start_condition"],
-          part_of_relationship: undefined,
           triggeredDate: parseISO("2024-06-01"),
         },
       ],

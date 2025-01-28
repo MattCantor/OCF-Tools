@@ -48,7 +48,7 @@ export type Day_Of_Month =
   | "31_OR_LAST_DAY_OF_MONTH"
   | "VESTING_START_DAY_OR_LAST_DAY_OF_MONTH";
 
-export interface Period_Days {
+export interface Period_Months {
   length: number;
   type: "MONTHS";
   occurrences: number;
@@ -56,7 +56,7 @@ export interface Period_Days {
   cliff_installment?: number;
 }
 
-export interface Period_Months {
+export interface Period_Days {
   length: number;
   type: "DAYS";
   occurrences: number;
@@ -80,22 +80,10 @@ export interface VestingRelativeTrigger extends Trigger {
   type: "VESTING_SCHEDULE_RELATIVE";
   period: Period_Months | Period_Days;
   relative_to_condition_id: string;
-  // relative_to_condition: GraphNode;
 }
 
 export interface VestingEventTrigger extends Trigger {
   type: "VESTING_EVENT";
-}
-
-export interface Earlier_Of_Trigger extends Trigger {
-  type: "VESTING_RELATIONSHIP_EARLIER_OF";
-  input_condition_ids: string[];
-}
-
-export interface Later_Of_Trigger extends Trigger {
-  type: "VESTING_RELATIONSHIP_LATER_OF";
-  input_condition_ids: string[];
-  calculation_type: "SUM" | "MAX" | "MIN" | "MEAN" | "MODE";
 }
 
 interface VestingConditionBase {
@@ -128,23 +116,11 @@ export interface VestingCondition_VestingEvent extends VestingConditionBase {
   trigger: VestingEventTrigger;
 }
 
-export interface VestingCondition_VestingRelationshipEarlierOf
-  extends VestingConditionBase {
-  trigger: Earlier_Of_Trigger;
-}
-
-export interface VestingCondition_VestingRelationshipLaterOf
-  extends VestingConditionBase {
-  trigger: Later_Of_Trigger;
-}
-
 export type VestingCondition =
   | VestingCondition_VestingStart
   | VestingCondition_VestingScheduleAbsolute
   | VestingCondition_VestingScheduleRelative
-  | VestingCondition_VestingEvent
-  | VestingCondition_VestingRelationshipEarlierOf
-  | VestingCondition_VestingRelationshipLaterOf;
+  | VestingCondition_VestingEvent;
 
 /******************************
  * Vesting Terms
@@ -304,12 +280,9 @@ export type GraphNode =
   | StartGraphNode
   | EventGraphNode
   | AbsoluteGraphNode
-  | RelativeGraphNode
-  | EarlierOfGraphNode
-  | LaterOfGraphNode;
+  | RelativeGraphNode;
 
 export interface GraphNodeBase extends VestingConditionBase {
-  part_of_relationship?: boolean;
   triggeredDate?: Date;
   prior_condition_ids: string[];
 }
@@ -328,14 +301,6 @@ export interface AbsoluteGraphNode extends GraphNodeBase {
 
 export interface RelativeGraphNode extends GraphNodeBase {
   trigger: VestingRelativeTrigger;
-}
-
-export interface EarlierOfGraphNode extends GraphNodeBase {
-  trigger: Earlier_Of_Trigger;
-}
-
-export interface LaterOfGraphNode extends GraphNodeBase {
-  trigger: Later_Of_Trigger;
 }
 
 /******************************

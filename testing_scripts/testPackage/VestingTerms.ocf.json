@@ -33,7 +33,7 @@
               "type": "MONTHS",
               "occurrences": 48,
               "day_of_month": "VESTING_START_DAY_OR_LAST_DAY_OF_MONTH",
-              "cliff_installmet": 12
+              "cliff_installment": 12
             },
             "relative_to_condition_id": "start_condition"
           },

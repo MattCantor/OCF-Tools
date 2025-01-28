@@ -27,6 +27,8 @@ export const generateVestingSchedule = (
    *
    * If both `vesting_terms_id` and `vestings` are provided, defer to the `vesting_terms_id`.
    * Absence of both `vesting_terms_id` and `vestings` means the shares are fully vested on issuance.
+   *
+   * TODO: Indicate whether this is natural language rule is already documented anywhere
    **************************************************************************************************/
 
   let vestingSchedule: PreProcessedVestingInstallment[];
@@ -46,7 +48,6 @@ export const generateVestingSchedule = (
     const graphNodes = vestingConditions.map((vc) => {
       const graphNode: GraphNode = {
         ...vc,
-        part_of_relationship: undefined,
         triggeredDate: undefined,
         prior_condition_ids: [],
       };
@@ -75,10 +76,8 @@ export const generateVestingSchedule = (
     const service = new VestingScheduleService(ocfData, executionStack);
 
     for (const node of executionStack.values()) {
-      if (!node.part_of_relationship) {
-        const installments = service.createInstallments(node);
-        service.addToVestingSchedule(installments);
-      }
+      const installments = service.createInstallments(node);
+      service.addToVestingSchedule(installments);
     }
 
     vestingSchedule = service.vestingSchedule;

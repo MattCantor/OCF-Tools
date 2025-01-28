@@ -1,10 +1,16 @@
 import { GraphNode } from "types";
 
+/**
+ * Creates a directed graph representing vesting conditions.
+ * Each node represents a vesting condition, and edges represent the vesting conditions
+ * in the next_condition_ids array.
+ */
 export const createVestingGraph = (graphNodes: GraphNode[]) => {
-  // Create graph
+  // Create the array of GraphNodes into a Map for O(1) lookup
+  // This graph represents the directed acyclical vesting graph
   const graph = new Map(graphNodes.map((node) => [node.id, node]));
 
-  // Calculate in-degrees of all nodes
+  // Calculate how many other vesting conditions point to each vesting condition
   const inDegree = new Map<string, number>();
   for (const node of graph.values()) {
     inDegree.set(node.id, 0);
@@ -15,17 +21,17 @@ export const createVestingGraph = (graphNodes: GraphNode[]) => {
     }
   }
 
-  // Find root nodes
+  // Find starting conditions (nodes with no predecessors)
   const rootNodes = Array.from(inDegree.entries())
     .filter(([_, degree]) => degree === 0)
     .map(([nodeId]) => nodeId);
 
   if (rootNodes.length === 0) {
-    throw new Error(`The graph does not have any root nodes`);
+    throw new Error(`The graph must have at least one starting condition`);
   }
 
   // Populate the prior_condition_ids array
-
+  // by processing the nodes in depth-first order
   const stack = [...rootNodes];
 
   while (stack.length > 0) {
@@ -43,13 +49,6 @@ export const createVestingGraph = (graphNodes: GraphNode[]) => {
         throw new Error(
           `Vesting condition with id ${nextConditionId} does not exist`
         );
-      }
-
-      if (
-        nextCondition.trigger.type === "VESTING_RELATIONSHIP_EARLIER_OF" ||
-        nextCondition.trigger.type === "VESTING_RELATIONSHIP_LATER_OF"
-      ) {
-        currentNode.part_of_relationship = true;
       }
 
       // Add the current node as a predecessor of the next node

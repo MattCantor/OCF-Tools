@@ -26,15 +26,6 @@ export abstract class ShouldBeInExecutionPathStrategy<T extends GraphNode> {
    */
   abstract execute(): boolean;
 
-  // protected createIssue(config: {
-  //   id: string;
-  //   message: string;
-  //   severity: "ERROR" | "WARNING";
-  // }) {
-  //   const issue = new VestingScheduleIssue(config);
-  //   this.config.issues.push(issue);
-  // }
-
   private getParentNodes() {
     const priorConditionIds = this.config.node.prior_condition_ids;
     const parentNodes = priorConditionIds.reduce((acc, priorConditionId) => {
