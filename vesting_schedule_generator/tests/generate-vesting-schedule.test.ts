@@ -173,12 +173,12 @@ describe("all or nothing with expiration", () => {
       expect(totalVested).toEqual(totalSharesUnderlying);
     });
 
-    test("Should not have a vesting event before 2026-01-01", () => {
+    test("Should not have a vesting event before 2024-01-01", () => {
       const vestingEventBeforeCliff = fullSchedule.find(
         (installment) =>
           isBefore(
             installment.date,
-            parse("2026-01-01", "yyyy-MM-dd", new Date())
+            parse("2024-01-01", "yyyy-MM-dd", new Date())
           ) && installment.quantity > 0
       );
       expect(vestingEventBeforeCliff).toBeUndefined();

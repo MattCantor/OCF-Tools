@@ -9,6 +9,7 @@
 
 import type { GraphNode, OCFDataBySecurityId } from "types";
 import { ShouldBeInExecutionPathStrategyFactory } from "./shouldBeInExecutionPath/factory";
+import { compareAsc } from "date-fns";
 
 /**
  * Creates an ordered execution stack from a vesting graph.
@@ -47,60 +48,43 @@ class ExecutionStackBuilder {
   }
 
   public build(): Map<string, GraphNode> {
-    // Start with root nodes - validate and find earliest
-    const validRootNodes = this.validateNodes(this.rootNodes);
-    const earliestRootNode = this.findEarliestNode(validRootNodes);
-
-    if (earliestRootNode) {
-      this.processDFS(earliestRootNode.id, null);
-    }
-
+    this.processSiblings(this.rootNodes);
     return this.executionStack;
   }
 
-  private processDFS(nodeId: string, parentId: string | null): void {
-    if (this.recusionStack.has(nodeId)) {
-      throw new Error(
-        `Cycle detected involving the vesting condition with id ${nodeId}`
-      );
+  private processSiblings(siblingIds: string[]): void {
+    // Check for cycles before processing
+    this.detectCycles(siblingIds);
+
+    const validNodes = this.getValidNodes(siblingIds);
+    if (validNodes.length === 0) return;
+
+    const earliestNode = this.findEarliestNode(validNodes);
+    if (!earliestNode) return;
+
+    this.visited.add(earliestNode.id);
+    this.executionStack.set(earliestNode.id, earliestNode);
+
+    // Process children of earliest node as next sibling group
+    if (earliestNode.next_condition_ids.length > 0) {
+      this.processSiblings(earliestNode.next_condition_ids);
     }
-
-    if (this.visited.has(nodeId)) return;
-
-    const node = this.graph.get(nodeId);
-    if (!node) throw new Error(`Node ${nodeId} not found`);
-
-    this.recusionStack.add(nodeId);
-    this.visited.add(nodeId);
-
-    // If node is a root or ealiest among siblings, process it
-    const siblings = parentId
-      ? Array.from(this.siblingGroups.get(parentId) || [])
-      : this.rootNodes;
-
-    const validSiblings = this.validateNodes(siblings);
-    const earliestSibling = this.findEarliestNode(validSiblings);
-
-    if (!parentId || earliestSibling?.id === nodeId) {
-      this.executionStack.set(nodeId, node);
-
-      // Always process children if node is included
-      if (node.next_condition_ids.length > 0) {
-        this.siblingGroups.set(nodeId, new Set(node.next_condition_ids));
-        const validChildren = this.validateNodes(node.next_condition_ids);
-        const earliestChild = this.findEarliestNode(validChildren);
-
-        if (earliestChild) {
-          this.processDFS(earliestChild.id, nodeId);
-        }
-      }
-    }
-
-    this.recusionStack.delete(nodeId);
   }
 
-  private validateNodes(nodeIds: string[]): GraphNode[] {
+  private detectCycles(nodeIds: string[]): void {
+    for (const nodeId of nodeIds) {
+      if (this.recusionStack.has(nodeId)) {
+        throw new Error(
+          `Cycle detected involving the vesting condition with id ${nodeId}`
+        );
+      }
+      this.recusionStack.add(nodeId);
+    }
+  }
+
+  private getValidNodes(nodeIds: string[]): GraphNode[] {
     return nodeIds
+      .filter((id) => !this.visited.has(id))
       .map((id) => {
         const node = this.graph.get(id);
         if (!node) throw new Error(`Node ${id} not found`);
@@ -119,15 +103,21 @@ class ExecutionStackBuilder {
       .filter((node): node is GraphNode => node !== null);
   }
 
-  /**
-   * Find the earliest node in the list of node ids
-   * if targetNodeToValidate is provided, it will return whether the target node is the earliest
-   */
-  private findEarliestNode = (nodes: GraphNode[]): GraphNode | null => {
+  private findEarliestNode(nodes: GraphNode[]): GraphNode | null {
     if (nodes.length === 0) return null;
 
-    return nodes.reduce((earliest, current) =>
-      current.triggeredDate! < earliest.triggeredDate! ? current : earliest
-    );
-  };
+    // Find earliest node using date-fns, with array position as tiebreaker
+    return nodes.reduce((earliest, current) => {
+      if (!earliest) return current;
+      const dateComparison = compareAsc(
+        current.triggeredDate!,
+        earliest.triggeredDate!
+      );
+      return dateComparison === 0
+        ? earliest // Keep earlier array position if there is a tie
+        : dateComparison < 0
+          ? current // Current is earlier
+          : earliest;
+    }, nodes[0]);
+  }
 }
