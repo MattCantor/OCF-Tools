@@ -2,11 +2,7 @@ import { OcfPackageContent } from "../read_ocf_package";
 import { getOCFDataBySecurityId } from "./get-ocf-data-by-security-id.ts";
 import { createExecutionStack } from "./execution-stack/create-execution-stack.ts";
 import { createVestingGraph } from "./create-vesting-graph.ts";
-import {
-  GraphNode,
-  PreProcessedVestingInstallment,
-  VestingInstallment,
-} from "types/index.ts";
+import { GraphNode, VestingInstallment } from "types/index.ts";
 import { applyRounding } from "./apply-rounding.ts";
 import { parseISO } from "date-fns";
 import { processFirstVestingDate } from "./first-vesting-date.ts";
@@ -31,7 +27,7 @@ export const generateVestingSchedule = (
    * TODO: Indicate whether this is natural language rule is already documented anywhere
    **************************************************************************************************/
 
-  let vestingSchedule: PreProcessedVestingInstallment[];
+  let vestingSchedule: VestingInstallment[];
 
   /******************************
    * If a `vesting_terms_id` is provided

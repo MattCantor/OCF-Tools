@@ -8,7 +8,7 @@ import {
 } from "date-fns";
 import type {
   Day_Of_Month,
-  PreProcessedVestingInstallment,
+  VestingInstallment,
   RelativeGraphNode,
 } from "types";
 import { CreateInstallmentConfig, CreateInstallmentStrategy } from "./strategy";
@@ -22,14 +22,12 @@ export class VestingRelativeStrategy extends CreateInstallmentStrategy<RelativeG
 
   getInstallments() {
     const installments = this.createAllInstallments();
-    const installmentsWithCliff = this.processCliff(installments);
-    const installmentsWithTriggeredDate = this.processTriggeredDate(
-      installmentsWithCliff
-    );
+    const installmentsWithTriggeredDate =
+      this.processTriggeredDate(installments);
     return installmentsWithTriggeredDate;
   }
 
-  private createAllInstallments(): PreProcessedVestingInstallment[] {
+  private createAllInstallments(): VestingInstallment[] {
     const { length, type, occurrences } = this.config.node.trigger.period;
 
     const relativeConditionId =
@@ -80,7 +78,6 @@ export class VestingRelativeStrategy extends CreateInstallmentStrategy<RelativeG
       const installment = this.createInstallment({
         date: newDate,
         quantity,
-        relativeDate: relativeCondition.triggeredDate,
       });
 
       baseDate = newDate;
@@ -133,51 +130,9 @@ export class VestingRelativeStrategy extends CreateInstallmentStrategy<RelativeG
     return newDate;
   }
 
-  private processCliff(vestingSchedule: PreProcessedVestingInstallment[]) {
-    let accumulatedQuantity = 0;
-    let cliffInProgress = true;
-
-    const vestingScheduleWithCliffs = vestingSchedule.reduce(
-      (acc, installment) => {
-        // if cliffInProgress has already been turned off, then no change is required to the installment
-        if (!cliffInProgress) {
-          acc.push(installment);
-          return acc;
-        }
-
-        // if the cliff is still underway, then
-
-        // add the installment's quantity to the accumulated amount
-        accumulatedQuantity += installment.quantity;
-
-        // if we're still before the cliff, then move on without creating an installment
-        if (installment.beforeCliff) {
-          return acc;
-        }
-
-        // otherwise this is the cliff installment, so we
-
-        // mark cliffInProgress as false
-        cliffInProgress = false;
-
-        // and create an installment with the accumulated amount
-        const modInstallment: PreProcessedVestingInstallment = {
-          ...installment,
-          quantity: accumulatedQuantity,
-        };
-
-        acc.push(modInstallment);
-        return acc;
-      },
-      [] as PreProcessedVestingInstallment[]
-    );
-
-    return vestingScheduleWithCliffs;
-  }
-
   private processTriggeredDate(
-    vestingSchedule: PreProcessedVestingInstallment[]
-  ): PreProcessedVestingInstallment[] {
+    vestingSchedule: VestingInstallment[]
+  ): VestingInstallment[] {
     let accumulatedQuantity = 0;
     const triggeredDate = this.config.node.triggeredDate;
 
@@ -203,7 +158,7 @@ export class VestingRelativeStrategy extends CreateInstallmentStrategy<RelativeG
         }
 
         if (index === firstIndexOnOrAfterRelativeDate) {
-          const modInstallment: PreProcessedVestingInstallment = {
+          const modInstallment: VestingInstallment = {
             ...installment,
             quantity: accumulatedQuantity,
           };
@@ -215,7 +170,7 @@ export class VestingRelativeStrategy extends CreateInstallmentStrategy<RelativeG
         acc.push(installment);
         return acc;
       },
-      [] as PreProcessedVestingInstallment[]
+      [] as VestingInstallment[]
     );
 
     return vestingScheduleWithTriggeredDate;

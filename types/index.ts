@@ -310,11 +310,6 @@ export interface VestingInstallment {
   quantity: number;
 }
 
-export interface PreProcessedVestingInstallment extends VestingInstallment {
-  relativeDate?: Date;
-  beforeCliff?: boolean;
-}
-
 export interface VestingScheduleStatus extends VestingInstallment {
   becameVested: number;
   totalVested: number;

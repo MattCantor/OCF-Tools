@@ -1,13 +1,8 @@
-import type {
-  GraphNode,
-  PreProcessedVestingInstallment,
-  VestingInstallment,
-  OCFDataBySecurityId,
-} from "types";
+import type { GraphNode, VestingInstallment, OCFDataBySecurityId } from "types";
 import { InstallmentStrategyFactory } from "./factory";
 
 export class VestingScheduleService {
-  public vestingSchedule: PreProcessedVestingInstallment[] = [];
+  public vestingSchedule: VestingInstallment[] = [];
   private vestedCount = 0;
   constructor(
     private ocfData: OCFDataBySecurityId,

@@ -7,39 +7,52 @@ import { ocfPackage as sixYear_option_back_loaded } from "./testOcfPackages/docu
 import { ocfPackage as custom_vesting_100pct_upfront } from "./testOcfPackages/documentation_examples/custom-vesting-100pct-upfront";
 import { ocfPackage as multi_tranche_event_based } from "./testOcfPackages/documentation_examples/multi-tranche-event-based";
 import { ocfPackage as path_dependent_milestone_vesting } from "./testOcfPackages/documentation_examples/path-dependent-milestone-vesting";
-import type { TX_Vesting_Event, TX_Vesting_Start } from "types";
+import type {
+  TX_Vesting_Event,
+  TX_Vesting_Start,
+  VestingInstallment,
+} from "types";
 import { OcfPackageContent } from "../../read_ocf_package";
-import { or } from "xstate";
+
+/******************************
+ * helper functions
+ ******************************/
+const getTotalSharesUnderlying = (ocfPackage: OcfPackageContent) => {
+  return ocfPackage.transactions.reduce((acc, tx) => {
+    if (tx.object_type === "TX_EQUITY_COMPENSATION_ISSUANCE") {
+      return (acc += parseFloat(tx.quantity));
+    }
+    return acc;
+  }, 0);
+};
+
+const getSchedule = (ocfPackage: OcfPackageContent) => {
+  return generateVestingSchedule(ocfPackage, "equity_compensation_issuance_01");
+};
+
+const getTotalVested = (schedule: VestingInstallment[]) => {
+  return schedule.reduce((acc, installment) => {
+    return (acc += installment.quantity);
+  }, 0);
+};
 
 /******************************
  * all or nothing
  ******************************/
 describe("all or nothing", () => {
+  const ocfPackage: OcfPackageContent = {
+    ...all_or_nothing,
+  };
+
   describe("Event does not occur", () => {
-    const ocfPackage = all_or_nothing;
-
-    const totalSharesUnderlying = ocfPackage.transactions.reduce((acc, tx) => {
-      if (tx.object_type === "TX_EQUITY_COMPENSATION_ISSUANCE") {
-        return (acc += parseFloat(tx.quantity));
-      }
-      return acc;
-    }, 0);
-
-    const fullSchedule = generateVestingSchedule(
-      ocfPackage,
-      "equity_compensation_issuance_01"
-    );
+    const schedule = getSchedule(ocfPackage);
 
     test("The total shares underlying should equal 4800", () => {
-      expect(totalSharesUnderlying).toEqual(4800);
+      expect(getTotalSharesUnderlying(ocfPackage)).toEqual(4800);
     });
 
     test("No shares should vest", () => {
-      const totalVested = fullSchedule.reduce((acc, installment) => {
-        return (acc += installment.quantity);
-      }, 0);
-
-      expect(totalVested).toEqual(0);
+      expect(getTotalVested(schedule)).toEqual(0);
     });
   });
   describe("Event occurs", () => {
@@ -51,38 +64,21 @@ describe("all or nothing", () => {
       vesting_condition_id: "qualifying-sale",
     };
 
-    const ocfPackage: OcfPackageContent = {
-      ...all_or_nothing,
-    };
-
     ocfPackage.transactions.push(event);
-
-    const totalSharesUnderlying = ocfPackage.transactions.reduce((acc, tx) => {
-      if (tx.object_type === "TX_EQUITY_COMPENSATION_ISSUANCE") {
-        return (acc += parseFloat(tx.quantity));
-      }
-      return acc;
-    }, 0);
+    const schedule = getSchedule(ocfPackage);
+    const totalSharesUnderlying = getTotalSharesUnderlying(ocfPackage);
+    const totalVested = getTotalVested(schedule);
 
     test("The total shares underlying should equal 4800", () => {
       expect(totalSharesUnderlying).toEqual(4800);
     });
 
-    const fullSchedule = generateVestingSchedule(
-      ocfPackage,
-      "equity_compensation_issuance_01"
-    );
-
     test("Final total vested should equal the total shares underyling", () => {
-      const totalVested = fullSchedule.reduce((acc, installment) => {
-        return (acc += installment.quantity);
-      }, 0);
-
       expect(totalVested).toEqual(totalSharesUnderlying);
     });
 
     test("Should not have a vesting event before 2026-01-01", () => {
-      const vestingEventBeforeCliff = fullSchedule.find(
+      const vestingEventBeforeCliff = schedule.find(
         (installment) =>
           isBefore(
             installment.date,
@@ -98,33 +94,24 @@ describe("all or nothing", () => {
  * all or nothing with expiration
  ******************************/
 describe("all or nothing with expiration", () => {
+  const ocfPackage = {
+    ...all_or_nothing_with_expiration,
+  };
+
   describe("qualifying sale does not occur", () => {
-    const ocfPackage = all_or_nothing_with_expiration;
-
-    const fullSchedule = generateVestingSchedule(
-      ocfPackage,
-      "equity_compensation_issuance_01"
-    );
-
-    const totalSharesUnderlying = ocfPackage.transactions.reduce((acc, tx) => {
-      if (tx.object_type === "TX_EQUITY_COMPENSATION_ISSUANCE") {
-        return (acc += parseFloat(tx.quantity));
-      }
-      return acc;
-    }, 0);
+    const schedule = getSchedule(ocfPackage);
+    const totalSharesUnderlying = getTotalSharesUnderlying(ocfPackage);
+    const totalVested = getTotalVested(schedule);
 
     test("The total shares underlying should equal 4800", () => {
       expect(totalSharesUnderlying).toEqual(4800);
     });
 
     test("No shares should vest", () => {
-      const totalVested = fullSchedule.reduce((acc, installment) => {
-        return (acc += installment.quantity);
-      }, 0);
-
       expect(totalVested).toEqual(0);
     });
   });
+
   describe("qualifying sale occurs", () => {
     const start_event: TX_Vesting_Start = {
       id: "vesting-start",
@@ -142,39 +129,22 @@ describe("all or nothing with expiration", () => {
       vesting_condition_id: "qualifying-sale",
     };
 
-    const ocfPackage: OcfPackageContent = {
-      ...all_or_nothing_with_expiration,
-    };
-
     ocfPackage.transactions.push(start_event);
     ocfPackage.transactions.push(event);
-
-    const fullSchedule = generateVestingSchedule(
-      ocfPackage,
-      "equity_compensation_issuance_01"
-    );
-
-    const totalSharesUnderlying = ocfPackage.transactions.reduce((acc, tx) => {
-      if (tx.object_type === "TX_EQUITY_COMPENSATION_ISSUANCE") {
-        return (acc += parseFloat(tx.quantity));
-      }
-      return acc;
-    }, 0);
+    const schedule = getSchedule(ocfPackage);
+    const totalSharesUnderlying = getTotalSharesUnderlying(ocfPackage);
+    const totalVested = getTotalVested(schedule);
 
     test("The total shares underlying should equal 4800", () => {
       expect(totalSharesUnderlying).toEqual(4800);
     });
 
     test("Final total vested should equal the total shares underyling", () => {
-      const totalVested = fullSchedule.reduce((acc, installment) => {
-        return (acc += installment.quantity);
-      }, 0);
-
       expect(totalVested).toEqual(totalSharesUnderlying);
     });
 
     test("Should not have a vesting event before 2024-01-01", () => {
-      const vestingEventBeforeCliff = fullSchedule.find(
+      const vestingEventBeforeCliff = schedule.find(
         (installment) =>
           isBefore(
             installment.date,
@@ -191,7 +161,9 @@ describe("all or nothing with expiration", () => {
  ******************************/
 
 describe("Four year one year cliff schedule", () => {
-  const ocfPackage = fourYear_oneYear_cliff_schedule;
+  const ocfPackage = {
+    ...fourYear_oneYear_cliff_schedule,
+  };
 
   const start_event: TX_Vesting_Start = {
     id: "vesting-start",
@@ -202,16 +174,27 @@ describe("Four year one year cliff schedule", () => {
   };
 
   ocfPackage.transactions.push(start_event);
-
-  const totalSharesUnderlying = ocfPackage.transactions.reduce((acc, tx) => {
-    if (tx.object_type === "TX_EQUITY_COMPENSATION_ISSUANCE") {
-      return (acc += parseFloat(tx.quantity));
-    }
-    return acc;
-  }, 0);
+  const schedule = getSchedule(ocfPackage);
+  const totalSharesUnderlying = getTotalSharesUnderlying(ocfPackage);
+  const totalVested = getTotalVested(schedule);
 
   test("The total shares underlying should equal 4800", () => {
     expect(totalSharesUnderlying).toEqual(4800);
+  });
+
+  test("Final total vested should equal the total shares underyling", () => {
+    expect(totalVested).toEqual(totalSharesUnderlying);
+  });
+
+  test("Should not have a vesting event before 2026-01-01", () => {
+    const vestingEventBeforeCliff = schedule.find(
+      (installment) =>
+        isBefore(
+          installment.date,
+          parse("2026-01-01", "yyyy-MM-dd", new Date())
+        ) && installment.quantity > 0
+    );
+    expect(vestingEventBeforeCliff).toBeUndefined();
   });
 });
 
@@ -220,19 +203,12 @@ describe("Four year one year cliff schedule", () => {
  ******************************/
 
 describe("Vested On Grant Date", () => {
-  const ocfPackage = sixYear_option_back_loaded;
-
-  // const fullSchedule = generateVestingSchedule(
-  //   ocfPackage,
-  //   "equity_compensation_issuance_01"
-  // );
-
-  const totalSharesUnderlying = ocfPackage.transactions.reduce((acc, tx) => {
-    if (tx.object_type === "TX_EQUITY_COMPENSATION_ISSUANCE") {
-      return (acc += parseFloat(tx.quantity));
-    }
-    return acc;
-  }, 0);
+  const ocfPackage = {
+    ...sixYear_option_back_loaded,
+  };
+  const schedule = getSchedule(ocfPackage);
+  const totalSharesUnderlying = getTotalSharesUnderlying(ocfPackage);
+  const totalVested = getTotalVested(schedule);
 
   test("The total shares underlying should equal 4800", () => {
     expect(totalSharesUnderlying).toEqual(4800);
@@ -244,19 +220,10 @@ describe("Vested On Grant Date", () => {
  ******************************/
 
 describe("Custom Vesting 100% Upfront", () => {
-  const ocfPackage = custom_vesting_100pct_upfront;
-
-  // const fullSchedule = generateVestingSchedule(
-  //   ocfPackage,
-  //   "equity_compensation_issuance_01"
-  // );
-
-  const totalSharesUnderlying = ocfPackage.transactions.reduce((acc, tx) => {
-    if (tx.object_type === "TX_EQUITY_COMPENSATION_ISSUANCE") {
-      return (acc += parseFloat(tx.quantity));
-    }
-    return acc;
-  }, 0);
+  const ocfPackage = { ...custom_vesting_100pct_upfront };
+  const schedule = getSchedule(ocfPackage);
+  const totalSharesUnderlying = getTotalSharesUnderlying(ocfPackage);
+  const totalVested = getTotalVested(schedule);
 
   test("The total shares underlying should equal 4800", () => {
     expect(totalSharesUnderlying).toEqual(4800);

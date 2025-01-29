@@ -121,7 +121,7 @@ describe("4 year monthly with one year cliff", () => {
           },
           next_condition_ids: [],
           prior_condition_ids: ["cliff"],
-          triggeredDate: parseISO("2026-01-01"),
+          triggeredDate: parseISO("2026-02-01"),
         },
       ],
     ]);

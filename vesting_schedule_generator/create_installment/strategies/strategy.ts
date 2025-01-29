@@ -1,9 +1,5 @@
 import Fraction from "fraction.js";
-import type {
-  GraphNode,
-  PreProcessedVestingInstallment,
-  OCFDataBySecurityId,
-} from "types";
+import type { GraphNode, VestingInstallment, OCFDataBySecurityId } from "types";
 
 export interface CreateInstallmentConfig<T extends GraphNode> {
   node: T;
@@ -15,7 +11,7 @@ export interface CreateInstallmentConfig<T extends GraphNode> {
 
 export abstract class CreateInstallmentStrategy<T extends GraphNode> {
   protected config: CreateInstallmentConfig<T>;
-  public installments!: PreProcessedVestingInstallment[];
+  public installments!: VestingInstallment[];
 
   constructor(config: CreateInstallmentConfig<T>) {
     this.config = config;
@@ -61,14 +57,12 @@ export abstract class CreateInstallmentStrategy<T extends GraphNode> {
   protected createInstallment(config: {
     date: Date;
     quantity: number;
-    relativeDate?: Date;
-  }): PreProcessedVestingInstallment {
+  }): VestingInstallment {
     return {
       date: config.date,
       quantity: config.quantity,
-      relativeDate: config.relativeDate,
     };
   }
 
-  abstract getInstallments(): PreProcessedVestingInstallment[];
+  abstract getInstallments(): VestingInstallment[];
 }

@@ -1,8 +1,6 @@
-import type { PreProcessedVestingInstallment } from "types";
+import type { VestingInstallment } from "types";
 
-export const applyRounding = (
-  vestingSchedule: PreProcessedVestingInstallment[]
-) => {
+export const applyRounding = (vestingSchedule: VestingInstallment[]) => {
   let cumulativeRemainder = 0;
 
   const roundedVestingSchedule = vestingSchedule.reduce((acc, installment) => {
@@ -20,7 +18,7 @@ export const applyRounding = (
     cumulativeRemainder = newQuantity - Math.floor(newQuantity);
 
     return acc;
-  }, [] as PreProcessedVestingInstallment[]);
+  }, [] as VestingInstallment[]);
 
   return roundedVestingSchedule;
 };

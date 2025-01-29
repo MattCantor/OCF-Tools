@@ -1,8 +1,8 @@
 import { compareAsc } from "date-fns";
-import type { PreProcessedVestingInstallment, VestingInstallment } from "types";
+import type { VestingInstallment } from "types";
 
 export const processFirstVestingDate = (
-  vestingSchedule: PreProcessedVestingInstallment[],
+  vestingSchedule: VestingInstallment[],
   grantDate: Date
 ) => {
   const firstIndexOnOrAfterGrantDate = vestingSchedule.findIndex(
