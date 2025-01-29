@@ -99,19 +99,7 @@ describe("all or nothing", () => {
  ******************************/
 describe("all or nothing with expiration", () => {
   describe("qualifying sale does not occur", () => {
-    const start_event: TX_Vesting_Start = {
-      id: "vesting-start",
-      object_type: "TX_VESTING_START",
-      date: "2025-01-01",
-      security_id: "equity_compensation_issuance_01",
-      vesting_condition_id: "vesting-start",
-    };
-
-    const ocfPackage: OcfPackageContent = {
-      ...all_or_nothing_with_expiration,
-    };
-
-    ocfPackage.transactions.push(start_event);
+    const ocfPackage = all_or_nothing_with_expiration;
 
     const fullSchedule = generateVestingSchedule(
       ocfPackage,
@@ -149,7 +137,7 @@ describe("all or nothing with expiration", () => {
     const event: TX_Vesting_Event = {
       id: "qualifying-sale",
       object_type: "TX_VESTING_EVENT",
-      date: "2026-01-01",
+      date: "2024-01-01",
       security_id: "equity_compensation_issuance_01",
       vesting_condition_id: "qualifying-sale",
     };
@@ -205,10 +193,15 @@ describe("all or nothing with expiration", () => {
 describe("Four year one year cliff schedule", () => {
   const ocfPackage = fourYear_oneYear_cliff_schedule;
 
-  // const fullSchedule = generateVestingSchedule(
-  //   ocfPackage,
-  //   "equity_compensation_issuance_01"
-  // );
+  const start_event: TX_Vesting_Start = {
+    id: "vesting-start",
+    object_type: "TX_VESTING_START",
+    date: "2025-01-01",
+    security_id: "equity_compensation_issuance_01",
+    vesting_condition_id: "vesting-start",
+  };
+
+  ocfPackage.transactions.push(start_event);
 
   const totalSharesUnderlying = ocfPackage.transactions.reduce((acc, tx) => {
     if (tx.object_type === "TX_EQUITY_COMPENSATION_ISSUANCE") {
