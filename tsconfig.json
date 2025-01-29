@@ -113,8 +113,9 @@
     "transpileOnly": true,
     "files": true,
     "compilerOptions": {
-      "module": "CommonJS",
-      "target": "ES2016"
+      "module": "CommonJS"
     }
-  }
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
 }
