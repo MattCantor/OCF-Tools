@@ -18,7 +18,6 @@ export interface BuildEquityAwardConfig {
     id: string;
     installmentCount: number;
     monthsPerInstallment: number;
-    cliff_installment: number;
   };
   VCD?: string;
   earlyExercisable?: boolean;
@@ -126,9 +125,8 @@ const buildIssuanceTx = (config: {
 const buildVestingConditions = (config: {
   installmentCount: number;
   monthsPerInstallment: number;
-  cliff_installment: number;
 }) => {
-  const { installmentCount, monthsPerInstallment, cliff_installment } = config;
+  const { installmentCount, monthsPerInstallment } = config;
   const vestingConditions: VestingCondition[] = [
     {
       id: "start_condition",
@@ -153,7 +151,6 @@ const buildVestingConditions = (config: {
           type: "MONTHS",
           occurrences: installmentCount,
           day_of_month: "VESTING_START_DAY_OR_LAST_DAY_OF_MONTH",
-          cliff_installment,
         },
         relative_to_condition_id: "start_condition",
       },

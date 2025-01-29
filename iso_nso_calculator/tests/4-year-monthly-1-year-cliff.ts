@@ -11,7 +11,6 @@ export const ocfPackage = buildEquityAward([
       id: "4-year-monthly-1-year-cliff",
       installmentCount: 48,
       monthsPerInstallment: 1,
-      cliff_installment: 12,
     },
   },
 ]);

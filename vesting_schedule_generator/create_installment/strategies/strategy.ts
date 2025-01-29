@@ -61,13 +61,11 @@ export abstract class CreateInstallmentStrategy<T extends GraphNode> {
   protected createInstallment(config: {
     date: Date;
     quantity: number;
-    beforeCliff: boolean;
     relativeDate?: Date;
   }): PreProcessedVestingInstallment {
     return {
       date: config.date,
       quantity: config.quantity,
-      beforeCliff: config.beforeCliff,
       relativeDate: config.relativeDate,
     };
   }

@@ -1,19 +1,13 @@
+import { OcfPackageContent, readOcfPackage } from "read_ocf_package";
+import { generateVestingSchedule } from "vesting_schedule_generator";
+
 try {
-  // if (!schedule.result) {
-  //   console.log(schedule.issues[0]);
-  // } else {
-  //   console.log(schedule.result);
-  // }
-  // const years: number[] = [];
-  // results.map((result) => {
-  //   if (!years.includes(result.Year)) {
-  //     years.push(result.Year);
-  //   }
-  // });
-  // years.forEach((year) => {
-  //   const resultsByYear = results.filter((result) => result.Year === year);
-  //   console.table(resultsByYear);
-  // });
+  const packagePath = "./testing_scripts/testPackage";
+  const securityId = "equity_compensation_issuance_01";
+  const ocfPackage: OcfPackageContent = readOcfPackage(packagePath);
+
+  const vestingSchedule = generateVestingSchedule(ocfPackage, securityId);
+  console.table(vestingSchedule);
 } catch (error) {
   if (error instanceof Error) {
     console.error("Error message:", error.message);

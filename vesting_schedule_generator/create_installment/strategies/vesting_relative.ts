@@ -30,15 +30,7 @@ export class VestingRelativeStrategy extends CreateInstallmentStrategy<RelativeG
   }
 
   private createAllInstallments(): PreProcessedVestingInstallment[] {
-    const { length, type, occurrences, cliff_installment } =
-      this.config.node.trigger.period;
-
-    let cliffInstallment: number;
-    if (!cliff_installment) {
-      cliffInstallment = 1;
-    } else {
-      cliffInstallment = Math.min(cliff_installment, occurrences);
-    }
+    const { length, type, occurrences } = this.config.node.trigger.period;
 
     const relativeConditionId =
       this.config.node.trigger.relative_to_condition_id;
@@ -88,7 +80,6 @@ export class VestingRelativeStrategy extends CreateInstallmentStrategy<RelativeG
       const installment = this.createInstallment({
         date: newDate,
         quantity,
-        beforeCliff: index + 1 < cliffInstallment,
         relativeDate: relativeCondition.triggeredDate,
       });
 

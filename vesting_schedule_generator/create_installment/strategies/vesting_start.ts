@@ -13,7 +13,6 @@ export class VestingStartStrategy extends CreateInstallmentStrategy<StartGraphNo
     const installment = this.createInstallment({
       date: this.config.node.triggeredDate!,
       quantity: sharesVesting,
-      beforeCliff: !!this.config.beforeCliff,
     });
 
     return [installment];

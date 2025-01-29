@@ -14,7 +14,6 @@ export class VestingAbsoluteStrategy extends CreateInstallmentStrategy<AbsoluteG
     const installment = this.createInstallment({
       date: this.config.node.triggeredDate!,
       quantity: sharesVesting,
-      beforeCliff: !!this.config.beforeCliff,
     });
     return [installment];
   }
