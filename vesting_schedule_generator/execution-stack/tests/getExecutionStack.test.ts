@@ -113,6 +113,8 @@ describe("No root nodes", () => {
   test("Should throw an error when cycle is detected", () => {
     expect(() =>
       getExecutionStack(NoRootNodes, "equity_compensation_issuance_01")
-    ).toThrow(`The graph does not have any root nodes`);
+    ).toThrow(
+      `The graph must have at least one starting condition with no prior conditions`
+    );
   });
 });

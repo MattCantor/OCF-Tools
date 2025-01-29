@@ -18,6 +18,7 @@ import { ShouldBeInExecutionPathStrategyFactory } from "./shouldBeInExecutionPat
  * In the case of sibling nodes in the vesting graph,
  * only one node may enter the execution stack,
  * based on whichever node is determined to have occcurred first in time.
+ * Throws an error if a cycle is detected in the graph.
  */
 export const createExecutionStack = (
   graph: Map<string, GraphNode>,
@@ -27,6 +28,7 @@ export const createExecutionStack = (
   const visited = new Set<string>(); // Track visited nodes
   const executionStack = new Map<string, GraphNode>(); // Final execution order
   const siblingGroups = new Map<string, Set<string>>(); // Track sibling groups
+  const recusionStack = new Set<string>(); // Track recursion
 
   // Process root nodes first (they are siblings)
   const earliestRootNodeId = findEarliestValidNode(
@@ -41,11 +43,18 @@ export const createExecutionStack = (
   }
 
   function processDFS(nodeId: string, parentId: string | null) {
+    if (recusionStack.has(nodeId)) {
+      throw new Error(
+        `Cycle detected involving the vesting condition with id ${nodeId}`
+      );
+    }
+
     if (visited.has(nodeId)) return;
 
     const node = graph.get(nodeId);
     if (!node) throw new Error(`Node ${nodeId} not found`);
 
+    recusionStack.add(nodeId);
     visited.add(nodeId);
 
     // Collect all siblings
@@ -78,6 +87,8 @@ export const createExecutionStack = (
         }
       }
     }
+
+    recusionStack.delete(nodeId);
   }
 
   return executionStack;

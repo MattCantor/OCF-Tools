@@ -27,7 +27,9 @@ export const createVestingGraph = (graphNodes: GraphNode[]) => {
     .map(([nodeId]) => nodeId);
 
   if (rootNodes.length === 0) {
-    throw new Error(`The graph must have at least one starting condition`);
+    throw new Error(
+      `The graph must have at least one starting condition with no prior conditions`
+    );
   }
 
   // Populate the prior_condition_ids array
