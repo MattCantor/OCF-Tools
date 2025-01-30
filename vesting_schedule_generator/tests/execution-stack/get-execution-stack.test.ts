@@ -1,13 +1,13 @@
 import { GraphNode, TX_Vesting_Start } from "types";
 import { getOCFDataBySecurityId } from "../../get-ocf-data-by-security-id";
-import { ocfPackage as FourYearMonthly1YearCliff } from "../../tests/testOcfPackages/documentation_examples/4yr-1yr-cliff-schedule";
+import { ocfPackage as FourYearMonthly1YearCliff } from "../testOcfPackages/documentation_examples/4yr-1yr-cliff-schedule";
 import { parseISO } from "date-fns";
-import { ocfPackage as DeliberateCycle } from "../../tests/testOcfPackages/deliberate-cycle";
-import { ocfPackage as NoRootNodes } from "../../tests/testOcfPackages/no-root-nodes";
+import { ocfPackage as DeliberateCycle } from "../testOcfPackages/deliberate-cycle";
+import { ocfPackage as NoRootNodes } from "../testOcfPackages/no-root-nodes";
 // import { createExecutionStack } from "../create-execution-stack";
-import { ExecutionStackBuilder } from "../create-execution-stack";
-import { ShouldBeInExecutionPathStrategyFactory } from "../shouldBeInExecutionPath/factory";
-import { createVestingGraph } from "../../create-vesting-graph";
+import { ExecutionStackBuilder } from "../../execution-stack/ExecutionStackBuilder";
+import { ExecutionStrategyFactory } from "../../execution-stack/factory";
+import { createVestingGraph } from "../../execution-stack/create-vesting-graph";
 import { OcfPackageContent } from "read_ocf_package";
 
 const getExecutionStack = (
@@ -56,7 +56,7 @@ const getExecutionStack = (
     graph,
     rootNodes,
     ocfData,
-    ShouldBeInExecutionPathStrategyFactory
+    ExecutionStrategyFactory
   );
 
   const executionStack = builder.build();

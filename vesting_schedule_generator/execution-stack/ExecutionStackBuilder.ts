@@ -8,48 +8,8 @@
  */
 
 import type { GraphNode, OCFDataBySecurityId } from "types";
-import {
-  IExecutionPathStrategyFactory,
-  ShouldBeInExecutionPathStrategyFactory,
-} from "./shouldBeInExecutionPath/factory";
+import { IExecutionStrategyFactory } from "./factory";
 import { compareAsc } from "date-fns";
-import {
-  ShouldBeInExecutionPathStrategy,
-  ShouldBeInExecutionPathStrategyConfig,
-} from "./shouldBeInExecutionPath/strategies/strategy";
-
-/**
- * Creates an ordered execution stack from a vesting graph.
- * @param graph - Map of all vesting conditions by ID
- * @param rootNodes - Starting nodes with no parents
- * @param ocfData - Open Cap Format data needed for validation
- * @returns Map of nodes in execution order
- * @throws Error if a cycle is detected in the graph or invalid node found
- */
-// export const getExecutionStackBuilder = (
-//   graph: Map<string, GraphNode>,
-//   rootNodes: string[],
-//   ocfData: OCFDataBySecurityId
-// ): Map<string, GraphNode> => {
-//   return new ExecutionStackBuilder(
-//     graph,
-//     rootNodes,
-//     ocfData,
-//     ShouldBeInExecutionPathStrategyFactory
-//   ).build();
-// };
-
-// interface ExecutionPathStrategyFactory {
-//   getStrategy<T extends GraphNode>(
-//     node: T
-//   ): new (
-//     config: ShouldBeInExecutionPathStrategyConfig<T>
-//   ) => ShouldBeInExecutionPathStrategy<T>;
-// }
-
-// export interface IExecutionStackBuilder {
-//   build(): Map<string, GraphNode>;
-// }
 
 /**
  * Builder class to create an ordered execution stack from a vesting graph
@@ -63,7 +23,7 @@ export class ExecutionStackBuilder {
     private graph: Map<string, GraphNode>,
     private rootNodes: string[],
     private ocfData: OCFDataBySecurityId,
-    private executionPathStrategyFactory: IExecutionPathStrategyFactory
+    private executionPathStrategyFactory: IExecutionStrategyFactory
   ) {
     this.visited = new Set<string>();
     this.executionStack = new Map<string, GraphNode>();
