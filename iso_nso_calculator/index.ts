@@ -1,9 +1,11 @@
 import { compareAsc, compareDesc, isBefore, isEqual, parseISO } from "date-fns";
 import { OcfPackageContent } from "../read_ocf_package";
 import type { VestingScheduleStatus, OCFDataBySecurityId } from "types";
-import { generateVestingSchedule } from "../vesting_schedule_generator/index.ts";
+import { VestingScheduleGenerator } from "../vesting_schedule_generator/index.ts";
 import { getVestingScheduleStatus } from "../vesting_schedule_generator/getVestingScheduleStatus.ts";
 import { getOCFDataBySecurityId } from "../vesting_schedule_generator/get-ocf-data-by-security-id.ts";
+import { ExecutionStackBuilder } from "../vesting_schedule_generator/execution-stack/create-execution-stack.ts";
+import { ShouldBeInExecutionPathStrategyFactory } from "../vesting_schedule_generator/execution-stack/shouldBeInExecutionPath/factory.ts";
 
 // Define the interface for the data supplied to the calculator
 interface Installment extends VestingScheduleStatus {
@@ -54,7 +56,13 @@ export class ISOCalculator {
        * generate vesting the vesting schedule
        ***************************************/
 
-      const schedule = generateVestingSchedule(this.ocfPackage, securityId);
+      const generator = new VestingScheduleGenerator(
+        this.ocfPackage,
+        ExecutionStackBuilder,
+        ShouldBeInExecutionPathStrategyFactory
+      );
+
+      const schedule = generator.generate(securityId);
 
       /*************************************************************************************
        * Get the relevant ocfData

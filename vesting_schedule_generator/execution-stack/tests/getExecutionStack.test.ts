@@ -4,7 +4,9 @@ import { ocfPackage as FourYearMonthly1YearCliff } from "../../tests/testOcfPack
 import { parseISO } from "date-fns";
 import { ocfPackage as DeliberateCycle } from "../../tests/testOcfPackages/deliberate-cycle";
 import { ocfPackage as NoRootNodes } from "../../tests/testOcfPackages/no-root-nodes";
-import { createExecutionStack } from "../create-execution-stack";
+// import { createExecutionStack } from "../create-execution-stack";
+import { ExecutionStackBuilder } from "../create-execution-stack";
+import { ShouldBeInExecutionPathStrategyFactory } from "../shouldBeInExecutionPath/factory";
 import { createVestingGraph } from "../../create-vesting-graph";
 import { OcfPackageContent } from "read_ocf_package";
 
@@ -50,7 +52,14 @@ const getExecutionStack = (
   /******************************
    * Create the execution stack
    ******************************/
-  const executionStack = createExecutionStack(graph, rootNodes, ocfData);
+  const builder = new ExecutionStackBuilder(
+    graph,
+    rootNodes,
+    ocfData,
+    ShouldBeInExecutionPathStrategyFactory
+  );
+
+  const executionStack = builder.build();
 
   return executionStack;
 };

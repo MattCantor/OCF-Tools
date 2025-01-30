@@ -8,6 +8,14 @@ import { VestingEventShouldBeInExecutionPath } from "./strategies/vesting_event"
 import { VestingRelativeShouldBeInExecutionPath } from "./strategies/vesting_relative";
 import { VestingStartShouldBeInExecutionPath } from "./strategies/vesting_start";
 
+export type IExecutionPathStrategyFactory = {
+  getStrategy<T extends GraphNode>(
+    node: T
+  ): new (
+    config: ShouldBeInExecutionPathStrategyConfig<T>
+  ) => ShouldBeInExecutionPathStrategy<T>;
+};
+
 export class ShouldBeInExecutionPathStrategyFactory {
   static getStrategy<T extends GraphNode>(node: T) {
     switch (node.trigger.type) {

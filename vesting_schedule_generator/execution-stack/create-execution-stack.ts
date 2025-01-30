@@ -8,8 +8,15 @@
  */
 
 import type { GraphNode, OCFDataBySecurityId } from "types";
-import { ShouldBeInExecutionPathStrategyFactory } from "./shouldBeInExecutionPath/factory";
+import {
+  IExecutionPathStrategyFactory,
+  ShouldBeInExecutionPathStrategyFactory,
+} from "./shouldBeInExecutionPath/factory";
 import { compareAsc } from "date-fns";
+import {
+  ShouldBeInExecutionPathStrategy,
+  ShouldBeInExecutionPathStrategyConfig,
+} from "./shouldBeInExecutionPath/strategies/strategy";
 
 /**
  * Creates an ordered execution stack from a vesting graph.
@@ -19,31 +26,47 @@ import { compareAsc } from "date-fns";
  * @returns Map of nodes in execution order
  * @throws Error if a cycle is detected in the graph or invalid node found
  */
-export const createExecutionStack = (
-  graph: Map<string, GraphNode>,
-  rootNodes: string[],
-  ocfData: OCFDataBySecurityId
-): Map<string, GraphNode> => {
-  return new ExecutionStackBuilder(graph, rootNodes, ocfData).build();
-};
+// export const getExecutionStackBuilder = (
+//   graph: Map<string, GraphNode>,
+//   rootNodes: string[],
+//   ocfData: OCFDataBySecurityId
+// ): Map<string, GraphNode> => {
+//   return new ExecutionStackBuilder(
+//     graph,
+//     rootNodes,
+//     ocfData,
+//     ShouldBeInExecutionPathStrategyFactory
+//   ).build();
+// };
+
+// interface ExecutionPathStrategyFactory {
+//   getStrategy<T extends GraphNode>(
+//     node: T
+//   ): new (
+//     config: ShouldBeInExecutionPathStrategyConfig<T>
+//   ) => ShouldBeInExecutionPathStrategy<T>;
+// }
+
+// export interface IExecutionStackBuilder {
+//   build(): Map<string, GraphNode>;
+// }
 
 /**
  * Builder class to create an ordered execution stack from a vesting graph
  */
-class ExecutionStackBuilder {
+export class ExecutionStackBuilder {
   private visited: Set<string>;
   private executionStack: Map<string, GraphNode>;
-  private siblingGroups: Map<string, Set<string>>;
   private recusionStack: Set<string>;
 
   constructor(
     private graph: Map<string, GraphNode>,
     private rootNodes: string[],
-    private ocfData: OCFDataBySecurityId
+    private ocfData: OCFDataBySecurityId,
+    private executionPathStrategyFactory: IExecutionPathStrategyFactory
   ) {
     this.visited = new Set<string>();
     this.executionStack = new Map<string, GraphNode>();
-    this.siblingGroups = new Map<string, Set<string>>();
     this.recusionStack = new Set<string>();
   }
 
@@ -82,6 +105,16 @@ class ExecutionStackBuilder {
     }
   }
 
+  private shouldBeIncluded(node: GraphNode): boolean {
+    const strategy = this.executionPathStrategyFactory.getStrategy(node);
+    return new strategy({
+      node,
+      graph: this.graph,
+      executionStack: this.executionStack,
+      ocfData: this.ocfData,
+    }).execute();
+  }
+
   private getValidNodes(nodeIds: string[]): GraphNode[] {
     return nodeIds
       .filter((id) => !this.visited.has(id))
@@ -89,14 +122,7 @@ class ExecutionStackBuilder {
         const node = this.graph.get(id);
         if (!node) throw new Error(`Node ${id} not found`);
 
-        const strategy =
-          ShouldBeInExecutionPathStrategyFactory.getStrategy(node);
-        const shouldBeIncluded = new strategy({
-          node,
-          graph: this.graph,
-          executionStack: this.executionStack,
-          ocfData: this.ocfData,
-        }).execute();
+        const shouldBeIncluded = this.shouldBeIncluded(node);
 
         return shouldBeIncluded ? node : null;
       })
