@@ -202,16 +202,42 @@ describe("Four year one year cliff schedule", () => {
  * Six Year Option Back Loaded
  ******************************/
 
-describe("Vested On Grant Date", () => {
+describe("Six Year Option Back Loaded", () => {
   const ocfPackage = {
     ...sixYear_option_back_loaded,
   };
+
+  const start_event: TX_Vesting_Start = {
+    id: "vesting-start",
+    object_type: "TX_VESTING_START",
+    date: "2025-01-01",
+    security_id: "equity_compensation_issuance_01",
+    vesting_condition_id: "vesting-start",
+  };
+
+  ocfPackage.transactions.push(start_event);
+
   const schedule = getSchedule(ocfPackage);
   const totalSharesUnderlying = getTotalSharesUnderlying(ocfPackage);
   const totalVested = getTotalVested(schedule);
 
   test("The total shares underlying should equal 4800", () => {
     expect(totalSharesUnderlying).toEqual(4800);
+  });
+
+  test("Final total vested should equal the total shares underyling", () => {
+    expect(totalVested).toEqual(totalSharesUnderlying);
+  });
+
+  test("Should not have a vesting event before 2027-01-01", () => {
+    const vestingEventBeforeCliff = schedule.find(
+      (installment) =>
+        isBefore(
+          installment.date,
+          parse("2027-01-01", "yyyy-MM-dd", new Date())
+        ) && installment.quantity > 0
+    );
+    expect(vestingEventBeforeCliff).toBeUndefined();
   });
 });
 
@@ -221,12 +247,38 @@ describe("Vested On Grant Date", () => {
 
 describe("Custom Vesting 100% Upfront", () => {
   const ocfPackage = { ...custom_vesting_100pct_upfront };
+
+  const event: TX_Vesting_Event = {
+    id: "full-vesting",
+    object_type: "TX_VESTING_EVENT",
+    date: "2024-01-01",
+    security_id: "equity_compensation_issuance_01",
+    vesting_condition_id: "full-vesting",
+  };
+
+  ocfPackage.transactions.push(event);
+
   const schedule = getSchedule(ocfPackage);
   const totalSharesUnderlying = getTotalSharesUnderlying(ocfPackage);
   const totalVested = getTotalVested(schedule);
 
   test("The total shares underlying should equal 4800", () => {
     expect(totalSharesUnderlying).toEqual(4800);
+  });
+
+  test("Final total vested should equal the total shares underyling", () => {
+    expect(totalVested).toEqual(totalSharesUnderlying);
+  });
+
+  test("Should not have a vesting event before 2024-01-01", () => {
+    const vestingEventBeforeCliff = schedule.find(
+      (installment) =>
+        isBefore(
+          installment.date,
+          parse("2024-01-01", "yyyy-MM-dd", new Date())
+        ) && installment.quantity > 0
+    );
+    expect(vestingEventBeforeCliff).toBeUndefined();
   });
 });
 
