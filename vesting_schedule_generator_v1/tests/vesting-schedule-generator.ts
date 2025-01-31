@@ -1,5 +1,5 @@
 import { isBefore, parse } from "date-fns";
-import { VestingScheduleGenerator } from "vesting_schedule_generator";
+import { VestingScheduleGenerator } from "vesting_schedule_generator_v1";
 import { ExecutionPathBuilder } from "../execution-path/ExecutionPathBuilder";
 import { ocfPackage as all_or_nothing } from "./testOcfPackages/documentation_examples/all-or-nothing";
 import { ocfPackage as all_or_nothing_with_expiration } from "./testOcfPackages/documentation_examples/all-or-nothing-with-expiration";

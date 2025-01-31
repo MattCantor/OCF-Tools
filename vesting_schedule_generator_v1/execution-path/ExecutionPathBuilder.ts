@@ -8,7 +8,7 @@
  */
 
 import type { GraphNode, OCFDataBySecurityId } from "types";
-import { IExecutionStrategyFactory } from "../execution-path/factory";
+import { IExecutionStrategyFactory } from "./factory";
 import { compareAsc } from "date-fns";
 
 /**

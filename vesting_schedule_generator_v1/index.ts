@@ -1,4 +1,4 @@
-import { OcfPackageContent } from "../read_ocf_package";
+import { OcfPackageContent } from "../read_ocf_package/index.ts";
 import { getOCFDataBySecurityId } from "./get-ocf-data-by-security-id.ts";
 import { createVestingGraph } from "./execution-path/create-vesting-graph.ts";
 import {

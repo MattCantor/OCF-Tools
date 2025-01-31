@@ -1,7 +1,8 @@
-// import { OcfPackageContent, readOcfPackage } from "read_ocf_package";
-import { generateVestingSchedule } from "vesting_schedule_generator";
+import { VestingScheduleGenerator } from "../vesting_schedule_generator_v1";
 import { ocfPackage } from "../vesting_schedule_generator/tests/testOcfPackages/documentation_examples/4yr-1yr-cliff-schedule";
-import { TX_Vesting_Event, TX_Vesting_Start } from "../types";
+import { TX_Vesting_Start } from "../types";
+import { ExecutionPathBuilder } from "../vesting_schedule_generator_v1/execution-path/ExecutionPathBuilder";
+import { ExecutionStrategyFactory } from "../vesting_schedule_generator_v1/execution-path/factory";
 
 try {
   const securityId = "equity_compensation_issuance_01";
@@ -16,7 +17,11 @@ try {
 
   ocfPackage.transactions.push(start_event);
 
-  const vestingSchedule = generateVestingSchedule(ocfPackage, securityId);
+  const vestingSchedule = new VestingScheduleGenerator(
+    ocfPackage,
+    ExecutionPathBuilder,
+    ExecutionStrategyFactory
+  ).generateSchedule(securityId);
   console.table(vestingSchedule);
 } catch (error) {
   if (error instanceof Error) {

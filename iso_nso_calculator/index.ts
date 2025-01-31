@@ -1,10 +1,10 @@
 import { compareAsc, compareDesc, isBefore, isEqual, parseISO } from "date-fns";
 import { OcfPackageContent } from "../read_ocf_package";
 import type { VestingScheduleStatus, OCFDataBySecurityId } from "types";
-import { VestingScheduleGenerator } from "../vesting_schedule_generator/index.ts";
-import { getOCFDataBySecurityId } from "../vesting_schedule_generator/get-ocf-data-by-security-id.ts";
-import { ExecutionPathBuilder } from "../vesting_schedule_generator/execution-path/ExecutionPathBuilder.ts";
-import { ExecutionStrategyFactory } from "../vesting_schedule_generator/execution-path/factory.ts";
+import { VestingScheduleGenerator } from "../vesting_schedule_generator_v1/index.ts";
+import { getOCFDataBySecurityId } from "../vesting_schedule_generator_v1/get-ocf-data-by-security-id.ts";
+import { ExecutionPathBuilder } from "../vesting_schedule_generator_v1/execution-path/ExecutionPathBuilder.ts";
+import { ExecutionStrategyFactory } from "../vesting_schedule_generator_v1/execution-path/factory.ts";
 
 // Define the interface for the data supplied to the calculator
 interface Installment extends VestingScheduleStatus {

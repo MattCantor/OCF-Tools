@@ -1,9 +1,9 @@
-import { VestingScheduleGenerator } from "vesting_schedule_generator";
+import { VestingScheduleGenerator } from "vesting_schedule_generator_v1";
 import { OcfPackageContent, readOcfPackage } from "../read_ocf_package";
 import { isBefore, parseISO } from "date-fns";
 import { VestingScheduleStatus } from "types";
-import { ExecutionPathBuilder } from "vesting_schedule_generator/execution-path/ExecutionPathBuilder";
-import { ExecutionStrategyFactory } from "vesting_schedule_generator/execution-path/factory";
+import { ExecutionPathBuilder } from "vesting_schedule_generator_v1/execution-path/ExecutionPathBuilder";
+import { ExecutionStrategyFactory } from "vesting_schedule_generator_v1/execution-path/factory";
 
 const packagePath = "./sample_ocf_folders/acme_holdings_limited";
 const securityId = "equity_compensation_issuance_01";

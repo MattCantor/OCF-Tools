@@ -1,6 +1,4 @@
 import { ISOCalculator } from "../../iso_nso_calculator";
-// import { ocfPackage as MultipleGrants} from "./multiple-grants";
-// import { ocfPackage as FourYearMonthly1YearCliff } from "../../vesting_schedule_generator/tests/testOcfPackages/four-year-monthly-with-1-year-cliff";
 import { ocfPackage as FourYearMonthly1YearCliff } from "./4-year-monthly-1-year-cliff";
 
 describe("Four Year Monthly 1 Year Cliff", () => {
